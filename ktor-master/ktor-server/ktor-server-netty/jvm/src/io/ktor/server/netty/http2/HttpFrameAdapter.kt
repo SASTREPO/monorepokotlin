@@ -1,0 +1,49 @@
+/*
+ * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
+ */
+
+package io.ktor.server.netty.http2
+
+import io.netty.buffer.*
+import io.netty.handler.codec.http2.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+import io.ktor.utils.io.*
+
+@OptIn(
+    ExperimentalCoroutinesApi::class, ObsoleteCoroutinesApi::class
+)
+internal suspend fun ReceiveChannel<Http2DataFrame>.http2frameLoop(bc: ByteWriteChannel) {
+    try {
+        while (!isClosedForReceive) {
+            @Suppress("DEPRECATION")
+            val message = receiveOrNull() ?: break
+            val content = message.content() ?: Unpooled.EMPTY_BUFFER
+
+            while (content.readableBytes() > 0) {
+                bc.write { bb ->
+                    val size = content.readableBytes()
+                    if (bb.remaining() > size) {
+                        val l = bb.limit()
+                        bb.limit(bb.position() + size)
+                        content.readBytes(bb)
+                        bb.limit(l)
+                    } else {
+                        content.readBytes(bb)
+                    }
+                }
+            }
+
+            bc.flush()
+            content.release()
+
+            if (message.isEndStream) {
+                break
+            }
+        }
+    } catch (t: Throwable) {
+        bc.close(t)
+    } finally {
+        bc.close()
+    }
+}

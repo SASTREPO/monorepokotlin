@@ -1,0 +1,15 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+  id 'ktlint-publication'
+}
+
+dependencies {
+  api deps.kotlin.compiler
+
+  implementation deps.kotlin.stdlib
+  implementation deps.ec4j
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.jimfs
+}

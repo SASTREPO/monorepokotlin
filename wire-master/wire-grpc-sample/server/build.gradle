@@ -1,0 +1,27 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.squareup.wire'
+apply plugin: 'application'
+
+mainClassName = "com.squareup.wire.whiteboard.MiskGrpcServerKt"
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+wire {
+  sourcePath {
+    srcDir "$rootDir/wire-grpc-sample/protos/src/main/proto"
+  }
+  kotlin {
+    out "src/main/java"
+    includes = ['com.squareup.wire.whiteboard.Whiteboard']
+    rpcCallStyle = 'blocking'
+    rpcRole = 'server'
+    singleMethodServices = true
+  }
+}
+
+dependencies {
+  implementation project(path: ':wire-grpc-sample:protos', configuration: 'default')
+  implementation deps.wire.runtime
+  implementation deps.misk
+}

@@ -1,0 +1,9 @@
+ext.module_group = "com.afollestad"
+ext.module_name = "drag-select-recyclerview"
+
+apply from: rootProject.file("gradle/android_library_config.gradle")
+
+dependencies {
+  api deps.androidx.recycler_view
+  implementation deps.kotlin.stdlib8
+}

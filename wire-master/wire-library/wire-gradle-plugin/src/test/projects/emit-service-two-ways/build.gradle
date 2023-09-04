@@ -1,0 +1,23 @@
+plugins {
+  id 'application'
+  id 'org.jetbrains.kotlin.jvm'
+  id 'com.squareup.wire'
+}
+
+wire {
+  // Blocking Server API.
+  kotlin {
+    exclusive = false
+    singleMethodServices = true
+    rpcCallStyle = 'blocking'
+    rpcRole = 'server'
+  }
+  // Coroutines Client API.
+  kotlin {
+    excludes = ['squareup.dinosaurs.Dinosaur', 'squareup.geology.Period']
+    exclusive = false
+    singleMethodServices = false
+    rpcCallStyle = 'suspending'
+    rpcRole = 'client'
+  }
+}

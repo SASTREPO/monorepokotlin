@@ -1,0 +1,499 @@
+= Kodein-DI on Android
+Salomon BRYS <salomon.brys@gmail.com>
+:toc: left
+:toc-position: left
+:toclevels: 5
+
+:version: 7.0.0
+:branch: 7.0
+
+You can use Kodein-DI as-is in your Android project or use the util library `kodein-di-android`.
+
+NOTE: Kodein-DI does work on Android as-is.
+      The `kodein-di-android` extension adds multiple android-specific utilities to Kodein-DI. +
+      Using or not using this extension really depends on your needs.
+
+Have a look at the https://github.com/Kodein-Framework/Kodein-Samples/tree/master/di/coffee-maker/android[Android demo project]!
+
+[[install]]
+== Install
+
+.How to use `kodein-di-android`:
+. Add this line in your `dependencies` block in your application `build.gradle` file:
++
+[subs="attributes"]
+----
+implementation 'org.kodein.di:kodein-di-framework-android-???:{version}'
+----
++
+Kodein-DI offers support for:
++
+[cols="1,2"]
+|=======
+| *Barebone Android*           | `kodein-di-framework-android-core`
+| *Android + Support library*  | `kodein-di-framework-android-support`
+| *Android + AndroidX library* | `kodein-di-framework-android-x`
+|=======
++
+IMPORTANT: From `6.3.0` On the JVM, you must be targeting `JDK 1.8` minimum!
++
+WARNING: If you are using `SupportFragment` in your application, then you *must* use either the `-support` or the `-x` package.
+
+. Declare the dependency bindings in the Android `Application`, having it implements `DIAware`.
++
+[source, kotlin]
+.Example: an Android Application class that implements DIAware
+----
+class MyApp : Application(), DIAware {
+	override val di by DI.lazy { <1>
+	    /* bindings */
+	}
+}
+----
+<1> Using `DI.lazy` allows you to access the `Context` at binding time.
++
+TIP: Don't forget to declare the Application in the `AndroidManifest.xml` file!
+
+. In your Activities, Fragments, and other context aware android classes, retrieve the `DI` object with the `di` function.
+
+. Retrieve your dependencies!
+
+
+== Retrieving
+
+Injection does not work on Android classes that are reified by the system (`Activity`, `Fragment`, etc.) due the fact that... they are reified by the system!
+Therefore, on such classes, you can either use retrieval, or if you want these classes to be independent of Kodein-DI, use the <<dependency-holder,dependency holder pattern>>.
+
+
+=== Getting a DI object
+
+You can always get the `DI` object by using:
+
+- `di()` inside an Android class (such as `Context`, `Activity`, `Fragment`, etc.)
+- `di(context)` or `di { context }` inside another class
+
+CAUTION: The `di` function will only work if your Android `Application` class implements the `DIAware` interface.
+
+TIP: The `di` result should be cached and not used multiple times in a row.
+
+
+=== Being DIAware
+
+It is very simple to have your Android classes be `DIAware`:
+
+[source, kotlin]
+.Example: a DIAware Android Activity
+----
+class MyActivity : Activity(), DIAware {
+
+    override val di by di() <1>
+
+    val ds: DataSource by instance()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ds.connect() <2>
+        /* ... */
+    }
+
+}
+----
+<1> Retrieving the application DI instance via context.
+<2> Because everything is lazy, the `di` AND `ds` instances will both be retrieved only when needed, which is at that time.
+
+
+=== Using a Trigger
+
+If you want all dependencies to be retrieved at `onCreate`, you can very easily use a trigger:
+
+[source, kotlin]
+.Example: using an trigger in a DIAware Android Activity
+----
+class MyActivity : Activity(), DIAware {
+
+    override val di by di()
+
+    override val diTrigger = DITrigger() <1>
+
+    val ds: DataSource by instance()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        diTrigger.trigger() <2>
+        /* ... */
+    }
+
+}
+----
+<1> Just create a trigger, and Kodein-DI will automatically use it.
+<2> The `di` AND all dependencies will both be retrieved at that time.
+
+NOTE: Using this approach has an important advantage: as all dependencies are retrieved in `onCreate`, you can be sure that all your dependencies have correctly been retrieved, meaning that there were no non-declared dependency. +
+      If you only use `instance` (no `provider` or `factory`), you can also be sure that there were no dependency loop.
+
+
+=== View Models
+
+To use Kodein-DI, you need an Android context.
+For that, View Models need to implement `AndroidViewModel`.
+
+It is very easy to use Kodein-DI inside View Models:
+
+NOTE: If you prefer your View Models to be independant from Kodein-DI, you can use a <<view-model-factory,View  Model Factory>>.
+
+[source, kotlin]
+.Example: using an trigger in a DIAware Android Activity
+----
+class MyViewModel(app: Application) : ApplicationViewModel(app), DIAware {
+
+    override val di by di() <1>
+
+    val repository : Repository by instance()
+}
+----
+<1> Retrieving the application's DI container.
+
+
+== Android module
+
+Kodein-DI-Android proposes a `Module` that enables easy retrieval of a lot of standard android services.
+
+NOTE: This module is absolutely *optional*, you are free to use it or leave it ;).
+
+[source, kotlin]
+.Example: importing the android module
+----
+class MyApplication : Application(), DIAware {
+    override val di by DI.lazy {
+        import(androidXModule(this@MyApplication)) <1>
+	    /* bindings */
+    }
+}
+----
+<1> Can either be `androidXModule` or `androidSupportModule` or `androidCoreModule`.
+
+You can see everything that this module proposes in the Kodein-Android https://github.com/Kodein-Framework/Kodein-DI/blob/{branch}/framework/android/kodein-di-framework-android-core/src/main/java/org/kodein/di/android/module.kt[module.kt] file.
+
+[source, kotlin]
+.Example: using kodein-DI to retrieve a LayoutInflater
+----
+class MyActivity : Activity(), DIAware {
+    override val di by di()
+    val inflater: LayoutInflater by instance() <1>
+}
+----
+
+If you are retrieving these classes inside a non-Android class, you need to define an Android `Context` as a DI context:
+
+[source, kotlin]
+.Example: using DI with a context to retrieve a LayoutInflater
+----
+val inflater: LayoutInflater by di.on(getActivity()).instance()
+----
+
+or
+
+[source, kotlin]
+.Example: using DI with a class context to retrieve a LayoutInflater
+----
+class MyUtility(androidContext: Context) : DIAware {
+
+    override val di by androidContext.di()
+
+    override val kodeinContext = diContext(androidContext) <1>
+
+    val inflater: LayoutInflater by instance()
+}
+----
+<1> Defining the default context: the Android context to use to retrieve Android system services.
+
+
+== Android context translators
+
+The android module provides a number of http://kodein.org/Kodein-DI/?{branch}/core#_context_translators[context translators].
+For example, they allow you to retrieve an activity scoped singleton inside a fragment, without manually specifying the activity.
+
+NOTE: The android modules automatically register these translators.
+
+However, if you don't want to use the android modules, but still need these translators, you can register them easily:
+
+[source, kotlin]
+.Example: importing the android module
+----
+class MyApplication : Application(), DIAware {
+    override val di by DI.lazy {
+        import(androidXContextTranslators) <1>
+	    /* bindings */
+    }
+}
+----
+<1> Can either be `androidXContextTranslators` or `androidSupportContextTranslators` or `androidCoreContextTranslators`.
+
+
+== Android scopes
+
+=== Component scopes
+
+Kodein-DI provides a standard scope for any component (Android or not).
+The `WeakContextScope` will keep singleton and multiton instances as long as the context (= component) lives.
+
+[source, kotlin]
+.Example: using an Activity scope
+----
+val di = DI {
+    bind<Controller>() with scoped(WeakContextScope.of<Activity>()).singleton { ControllerImpl(context) } <1>
+}
+----
+<1> `context` is of type `Activity` because we are using the `WeakContextScope.of<Activity>()`.
+
+CAUTION: WeakContextScope is *NOT* compatible with `ScopeCloseable`.
+
+
+=== Activity retained scope
+
+Kodein-DI-Android provides the `ActivityRetainedScope`, which is a scope that allows activity-scoped singletons or multitons that are independent from the activity restart.
+
+This means that for the same activity, you'll get the same instance, even if the activity restarts.
+
+CAUTION: This means that you *should never retain the activity* passed at creation because it may have been restarted and not valid anymore!
+
+[source, kotlin]
+.Example: using an Activity retained scope
+----
+val di = DI {
+    bind<Controller>() with scoped(ActivityRetainedScope).singleton { ControllerImpl() }
+}
+----
+
+NOTE: This scope *IS* compatible with `ScopeCloseable`: http://kodein.org/Kodein-DI/?{branch}/core#scope-closeable[see documentation].
+
+
+=== Lifecycle scope
+
+Kodein-DI-Android provides the `AndroidLifecycleScope`, which is a scope that allows activity-scoped singletons or multitons that are bound to a component lifecycle.
+It uses Android support Lifecycle, so you need to use Android support's `LifecycleOwner` components.
+
+[source, kotlin]
+.Example: using an Activity retained scope
+----
+val di = DI {
+    bind<Controller>() with scoped(AndroidLifecycleScope<Fragment>()).singleton { ControllerImpl(context) }
+}
+----
+
+NOTE: These lifecycles are *NOT* immune to activity restart due to configuration change.
+
+NOTE: This scope *IS* compatible with `ScopeCloseable`: http://kodein.org/Kodein-DI/?{branch}/core#scope-closeable[see documentation].
+
+
+== Layered dependencies
+
+=== The closest DI pattern
+
+Android components can be thought as layers.
+For example, a `View` defines a layer, on top of an `Activity` layer, itself on top of the `Application` layer.
+
+The `di` function will always return the DI container of the closest parent layer.
+In a `View` or a `Fragment`, for example, it will return the containing Activity's DI container, if it defines one, else it will return the "global" Application DI container.
+
+In the following code example, if `MyActivity` contains Fragments, and that these fragments get their DI object via `di()`, they will receive the `MyActivity` DI object, instead of the Application one.
+
+
+=== Component based sub DI
+
+In Android, each component has its own lifecycle, much like a "mini application".
+You may need to have dependencies that are defined only inside a specific component and its subcomponents (such as an activity).
+Kodein-DI allows you to create a `DI` instance that lives only inside one of your components:
+
+[source, kotlin]
+.Example: defining an Activity specific DI container
+----
+class MyActivity : Activity(), DIAware {
+
+    override val di by subDI(di()) { <1>
+        /* activity specific bindings */
+    }
+
+}
+----
+<1> Creating a sub DI container that is valid for this activity and all components of this activity.
+
+[NOTE]
+====
+By default all bindings are cached. You can also define the way the parent DI container is extended by defining the http://kodein.org/Kodein-DI/?{branch}/core#_overridden_access_from_parent[copy mode]. In below example each instance of activity will store a copy of the DI module (all bindings including `singleton` will be recreated per activity instance).
+
+[source, kotlin]
+.Example: defining an Activity specific DI container that copies all parent bindings
+----
+override val di by subDI(di(), copy = Copy.All) {
+    /* component specific bindings */
+}
+----
+====
+
+
+=== Activity retained sub DI container
+
+Kodein-DI-Android provides `retainedSubDI` for Activities.
+It creates a DI object that is *immune to activity restarts*.
+
+CAUTION: This means that you *should never access the containing activity* it may have been restarted and not valid anymore!
+
+[source, kotlin]
+.Example: defining an Activity specific DI container
+----
+class MyActivity : Activity(), DIAware {
+
+    override val di: DI by retainedSubDI(di()) { <1>
+        /* activity specific bindings */
+    }
+
+}
+----
+<1> Using `retainedSubDI` instead of `subDI` ensures that the DI object is retained and not recreated between activity restarts.
+
+[NOTE]
+====
+You can define the way the parent DI container is extended by defining the http://kodein.org/Kodein-DI/?{branch}/core#_overridden_access_from_parent[copy mode]:
+
+[source, kotlin]
+.Example: defining an Activity specific DI container that copies all parent bindings
+----
+override val di by retainedSubDI(di(), copy = Copy.All) {
+    /* component specific bindings */
+}
+----
+====
+
+
+== Independant Activity retained DI container
+
+Kodein-DI provides the `retainedDI` function that creates a DI instance that is _independendant from the parent_.
+
+CAUTION: This means that all bindings in the application context are NOT available through this new DI container.
+
+[source, kotlin]
+.Example: defining an independant DI Container.
+----
+class MyActivity : Activity() {
+
+    val activityKodein: DI by retainedDI { <1>
+        /* activity specific bindings */
+    }
+
+}
+----
+
+
+== Kodein-DI in Android without the extension
+
+=== Being DIAware
+
+It is quite easy to have your Android components being `DIAware` (provided that your `Application` class is `DIAware`).
+
+
+==== Using lazy
+
+[source, kotlin]
+.Example: a DIAware Activity
+----
+class MyActivity : Activity(), DIAware {
+    override val di: DI by lazy { (applicationContext as DIAware).di }
+}
+----
+
+
+==== Using lateinit
+
+[source, kotlin]
+.Example: a DIAware Activity
+----
+class MyActivity : Activity(), DIAware {
+    override lateinit var di: DI
+    override fun onCreate(savedInstanceState: Bundle?) {
+        di = (applicationContext as DIAware).di
+    }
+}
+----
+
+
+=== Using LateInitDI
+
+If you don't want the component classes to be DIAware, you can use a `LateInitDI`:
+
+[source, kotlin]
+.Example: an Activity with LateInitDI
+----
+class MyActivity : Activity() {
+    val di = LateInitDI()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        di.baseKodein = (applicationContext as DIAware).di
+    }
+}
+----
+
+
+=== Being Kodein-DI independant
+
+[[dependency-holder]]
+==== The dependency holder pattern
+
+If you want your components to be Kodein-DI independent, you can use the dependency holder pattern:
+
+[source, kotlin]
+.Example: The dependency holder pattern
+----
+class MyActivity : Activity() {
+
+    class Deps(
+            val ds: DataSource,
+            val ctrl: controller
+    )
+
+    val deps by lazy { (applicationContext as MyApplication).creator.myActivity() }
+
+    val ds by lazy { deps.ds }
+    val ctrl by lazy { deps.ctrl }
+
+    /* ... */
+}
+
+class MyApplication : Application() {
+
+	interface Creator {
+	    fun myActivity(): MyActivity.Deps
+	}
+
+	val creator: Creator = DICreator()
+
+    /* ... */
+}
+
+class DICreator : MyApplication.Creator {
+
+    private val di = DI {
+        /* bindings */
+    }.direct
+
+    override fun myActivity() = di.newInstance { MyActivity.Deps(instance(), instance()) }
+}
+
+----
+
+
+[[view-model-factory]]
+==== View Model Factory
+
+If you want your view models to be independant from Kodein-DI, then you need to inject them (meaning passing their dependencies by constructor).
+To do that, you need to create your own `ViewModelProvider.Factory`.
+
+Here is a simple one:
+
+[source, kotlin]
+.A DI View Model Factory
+----
+class DIViewModelFactory(val di: DI) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            di.direct.Instance(TT(modelClass))
+}
+----

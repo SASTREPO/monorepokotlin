@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/material_drawer_item_primary">
+
+    <LinearLayout
+        android:id="@+id/swipe_result_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC0000"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/material_drawer_vertical_padding"
+        android:paddingLeft="@dimen/material_drawer_vertical_padding"
+        android:paddingEnd="@dimen/material_drawer_vertical_padding"
+        android:paddingRight="@dimen/material_drawer_vertical_padding"
+        android:visibility="visible">
+
+        <TextView
+            android:id="@+id/swiped_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center_vertical|start"
+            android:lines="1"
+            android:singleLine="true"
+            android:textColor="@android:color/primary_text_dark"
+            android:textDirection="anyRtl"
+            android:textSize="@dimen/material_drawer_item_primary_text"
+            tools:text="Removed" />
+
+        <TextView
+            android:id="@+id/swiped_action"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fontFamily="sans-serif"
+            android:gravity="center_vertical|start"
+            android:lines="1"
+            android:singleLine="true"
+            android:text="@string/action_undo"
+            android:textAllCaps="true"
+            android:textColor="@android:color/primary_text_dark"
+            android:textDirection="anyRtl"
+            android:textSize="@dimen/material_drawer_item_primary_description"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/item_content"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/material_drawer_item_primary"
+        android:elevation="4dp"
+        android:gravity="center_vertical|start"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/material_drawer_vertical_padding"
+        android:paddingLeft="@dimen/material_drawer_vertical_padding"
+        android:paddingEnd="@dimen/material_drawer_vertical_padding"
+        android:paddingRight="@dimen/material_drawer_vertical_padding"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/material_drawer_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center_vertical|start"
+            android:lines="1"
+            android:singleLine="true"
+            android:textDirection="anyRtl"
+            android:textSize="@dimen/material_drawer_item_primary_text"
+            tools:text="Some drawer text" />
+
+        <TextView
+            android:id="@+id/material_drawer_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
+            android:gravity="center_vertical|start"
+            android:lines="1"
+            android:singleLine="true"
+            android:textDirection="anyRtl"
+            android:textSize="@dimen/material_drawer_item_primary_description"
+            tools:text="Some drawer text" />
+    </LinearLayout>
+</FrameLayout>

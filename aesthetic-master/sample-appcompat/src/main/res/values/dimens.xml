@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <dimen name="content_inset_more">24dp</dimen>
+  <dimen name="content_inset">16dp</dimen>
+  <dimen name="content_inset_quarter">4dp</dimen>
+  <dimen name="content_inset_half">8dp</dimen>
+  <dimen name="content_inset_less">12dp</dimen>
+
+  <dimen name="text_size_title">24sp</dimen>
+  <dimen name="text_size_body">16sp</dimen>
+  <dimen name="text_size_huge">36sp</dimen>
+
+  <dimen name="button_height">56dp</dimen>
+
+  <dimen name="drawer_header_height">196dp</dimen>
+  <dimen name="collapsing_toolbar_appbarheight">272dp</dimen>
+
+  <dimen name="toolbar_elevation">6dp</dimen>
+
+</resources>

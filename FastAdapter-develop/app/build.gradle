@@ -1,0 +1,187 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'realm-android'
+apply plugin: 'com.mikepenz.aboutlibraries.plugin'
+
+//wrap with try and catch so the build is working even if the signing stuff is missing
+try {
+    apply from: '../../../signing.gradle'
+} catch (ex) {
+}
+
+android {
+    compileSdkVersion setup.compileSdk
+    buildToolsVersion setup.buildTools
+
+    defaultConfig {
+        minSdkVersion setup.minSdk
+        targetSdkVersion setup.targetSdk
+        versionCode release.versionCode
+        versionName release.versionName
+
+        multiDexEnabled true
+
+        setProperty("archivesBaseName", "FastAdapter-v$versionName-c$versionCode")
+    }
+    buildTypes {
+        debug {
+            versionNameSuffix "-DEBUG"
+            try {
+                signingConfig signingConfigs.debug
+            } catch (ex) {
+            }
+            minifyEnabled false
+        }
+        release {
+            try {
+                signingConfig signingConfigs.release
+            } catch (ex) {
+            }
+            zipAlignEnabled true
+            minifyEnabled false
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        exclude 'META-INF/library-core_release.kotlin_module'
+        exclude 'META-INF/library_release.kotlin_module'
+    }
+    dexOptions {
+        javaMaxHeapSize = "4G"
+    }
+
+    buildFeatures {
+        viewBinding = true
+        dataBinding = true
+    }
+}
+
+kapt {
+    generateStubs = true
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+
+    implementation 'com.android.support:multidex:1.0.3'
+
+    implementation project(':library-core')
+    implementation project(':library-extensions-binding')
+    implementation project(':library-extensions-diff')
+    implementation project(':library-extensions-drag')
+    implementation project(':library-extensions-expandable')
+    implementation project(':library-extensions-scroll')
+    implementation project(':library-extensions-swipe')
+    implementation project(':library-extensions-ui')
+    implementation project(':library-extensions-utils')
+    implementation project(':library-extensions-paged')
+
+    implementation "androidx.appcompat:appcompat:${versions.appcompat}"
+    implementation "androidx.recyclerview:recyclerview:${versions.recyclerView}"
+    implementation "androidx.cardview:cardview:${versions.cardview}"
+    implementation "com.google.android.material:material:${versions.material}"
+
+    // used to provide out of the box icon font support. simplifies development,
+    // and provides scalable icons. the core is very very light
+    // https://github.com/mikepenz/Android-Iconics
+    implementation "com.mikepenz:iconics-core:${versions.iconics}"
+    implementation "com.mikepenz:iconics-views:${versions.iconics}"
+
+    //used to generate the drawer on the left
+    //https://github.com/mikepenz/MaterialDrawer
+    implementation("com.mikepenz:materialdrawer:${versions.materialdrawer}") {
+        exclude module: "fastadapter"
+        exclude module: "fastadapter-extensions-expandable"
+    }
+    implementation("com.mikepenz:materialdrawer-iconics:${versions.materialdrawer}") {
+        exclude module: "fastadapter"
+        exclude module: "fastadapter-extensions-expandable"
+    }
+    //used to provide different itemAnimators for the RecyclerView
+    //https://github.com/mikepenz/ItemAnimators
+    implementation 'com.mikepenz:itemanimators:1.1.0'
+    //used to generate the Open Source section
+    //https://github.com/mikepenz/AboutLibraries
+    implementation("com.mikepenz:aboutlibraries:${versions.aboutlib}") {
+        exclude module: "fastadapter"
+        exclude module: "fastadapter-extensions-expandable"
+    }
+    //used to display the icons in the drawer
+    //https://github.com/mikepenz/Android-Iconics
+    implementation 'com.mikepenz:material-design-iconic-typeface:2.2.0.6-kotlin@aar'
+    implementation 'com.mikepenz:community-material-typeface:3.5.95.1-kotlin@aar'
+    implementation 'com.mikepenz:google-material-typeface:3.0.1.4.original-kotlin@aar'
+    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.0-kotlin@aar'
+
+    //Used for the StickyHeaderSample
+    //https://github.com/timehop/sticky-headers-recyclerview
+    //original dependency: implementation  'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
+    //customized version to allow minimal header animation
+    implementation 'com.mikepenz.thirdparty:stickyheadersrecyclerview:0.5.1-SNAPSHOT@aar'
+
+    //Used to provide the FastScrollBar
+    //https://github.com/krimin-killr21/MaterialScrollBar
+    implementation 'com.github.turing-tech:MaterialScrollBar:13.3.4'
+
+    //https://github.com/JakeWharton/butterknife
+    implementation 'com.jakewharton:butterknife:10.2.1'
+    kapt 'com.jakewharton:butterknife-compiler:10.2.1'
+
+    //used to load the images in the ImageListSample
+    //https://github.com/bumptech/glide
+    implementation 'com.github.bumptech.glide:glide:3.8.0'
+
+    //Used to provide the drag selection like google photos
+    implementation 'com.github.MFlisar:DragSelectRecyclerView:0.3'
+
+    //mopub sdk to showcase the usage of the mopub adapter
+    implementation('com.mopub:mopub-sdk:4.11.0@aar') {
+        transitive = true
+        exclude group: "com.google.android.exoplayer"
+    }
+    implementation('com.mopub:mopub-sdk-native-static:4.11.0@aar') {
+        transitive = true
+        exclude group: "com.google.android.exoplayer"
+    }
+
+    //Used to async operations
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
+
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+
+    implementation "androidx.room:room-runtime:${versions.room}"
+    kapt "androidx.room:room-compiler:${versions.room}"
+
+    implementation "androidx.lifecycle:lifecycle-extensions:${versions.lifecycle}"
+
+
+    configurations.all {
+        resolutionStrategy.force "com.mikepenz:iconics-core:${versions.iconics}"
+        resolutionStrategy.force "com.mikepenz:iconics-views:${versions.iconics}"
+        resolutionStrategy.force "com.mikepenz:aboutlibraries-core:${versions.aboutlib}"
+        resolutionStrategy.force "com.mikepenz:aboutlibraries:${versions.aboutlib}"
+        resolutionStrategy.force "androidx.appcompat:appcompat:${versions.appcompat}"
+        resolutionStrategy.force "androidx.recyclerview:recyclerview:${versions.recyclerView}"
+        resolutionStrategy.force "androidx.cardview:cardview:${versions.cardview}"
+        resolutionStrategy.force "com.google.android.material:material:${versions.material}"
+    }
+}
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "io.realm:realm-gradle-plugin:6.0.0"
+    }
+}

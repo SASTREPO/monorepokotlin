@@ -1,0 +1,346 @@
+= Getting started with Kodein-DI
+Salomon BRYS <salomon.brys@gmail.com>
+:toc: left
+:toc-position: left
+:toclevels: 5
+
+:version: 7.0.0
+:branch: 7.0
+
+Kodein-DI is a *Dependency Injection* library.
+It allows you to bind your business unit interfaces with their implementation and thus having each business unit being independent.
+
+NOTE: This guide assumes a JVM target.
+      Kodein-DI works exactly the same on all targets that are supported by Kotlin (JVM, Android, JS, Native).
+
+== Choose & Install
+
+=== Flavour
+
+IMPORTANT: From `6.3.0` On the JVM, you must be targeting `JDK 1.8` minimum!
+
+_Kodein-DI_ is compatible with all platforms that the Kotlin language compiles to: JVM & compatible (Android), Javascript and all the Kotlin/Native targets.
+
+Since `7.0.0`, a new https://github.com/Kodein-Framework/Kodein-Type[type system] has been designed and included to _Kodein-DI_.
+Thus, it appears to the developer that there is no more _obvious_ differences between platforms, you no longer have to choose between `erased` or `generic` dependencies.
+Starting from `7.0.0`, _Kodein-DI_ is using the `generic` version of the type system, meaning you should be able to bind generics easily for _Kotlin/Multiplatform_ projects.
+So, whatever platform you are targeting, `bind<List<String>>()` and `bind<List<Int>>()` will represent two different bindings. +
+Similarly, `di.instance<List<String>>()` and `di.instance<List<Int>>()` will yield two different list.
+
+[INFO]
+====
+Since *7.0*, _Kodein-DI_ can use `generic` for non JVM platforms, thus it is now the default implementation.
+However you still can force the use of `erased` with the generic and erased function forms!
+====
+
+TIP: Keep in mind that it should be quite rare for DI to be performance critical.
+     DI happens only once per injected object, so to measure how critical DI is, ask yourself how much time injected objects will be created, and if these creations are themselves performance critical.
+
+=== Install
+
+==== With Maven
+
+Add the JCenter repository:
+
+[source,xml,subs="attributes"]
+----
+&lt;repositories&gt;
+    &lt;repository&gt;
+      &lt;id&gt;jcenter&lt;/id&gt;
+      &lt;url&gt;https://jcenter.bintray.com&lt;/url&gt;
+    &lt;/repository&gt;
+&lt;/repositories&gt;
+----
+
+Then add the dependency:
+
+[source,xml,subs="attributes"]
+----
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.kodein.di&lt;/groupId&gt;
+        &lt;artifactId&gt;kodein-di-jvm&lt;/artifactId&gt;
+        &lt;version&gt;{version}&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+----
+
+==== With Gradle
+
+Add the JCenter repository:
+
+[source,groovy,subs="attributes"]
+----
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+----
+
+Then add the dependency:
+
+- *Using Gradle 6+*
+
+[source,groovy,subs="attributes"]
+----
+dependencies {
+    implementation 'org.kodein.di:kodein-di:{version}'
+}
+----
+
+- *Using Gradle 5.x*
+
+.build.gradle.kts
+[source,kotlin,subs="attributes"]
+----
+dependencies {
+    implementation("org.kodein.di:kodein-di:{version}")
+}
+----
+
+You need to activate the preview feature `GRADLE_METADATA` in your _.setings.gradle.kts_ file.
+
+.setings.gradle.kts
+[source,kotlin,subs="attributes"]
+----
+enableFeaturePreview("GRADLE_METADATA")
+----
+
+- *Using Gradle 4.x*
+
+.build.gradle.kts
+[source,kotlin,subs="attributes"]
+----
+dependencies {
+    implementation("org.kodein.di:kodein-di-jvm:{version}")
+}
+----
+
+== Bindings
+
+=== Definition
+
+In DI, each business unit will have dependencies.
+Those dependencies should (nearly almost) always be interfaces.
+This allows:
+
+* Loose coupling: the business unit knows what it needs, not how those needs are fulfilled.
+* Unit testing: You can unit test the business unit by mocking its dependencies.
+* Separation: Different people can work on different units / dependencies.
+
+TIP: Business units are very often themselves dependencies to other business units.
+
+Each business unit and dependency need to be managed.
+Some dependencies need to be created on demand, while other will need to exist only once.
+For example, a `Random` object may need to be re-created every time one is needed, while a `Database` object should exist only once in the application.
+
+Have a look at these two sentences:
+
+* "I want to *bind* the `Random` type to a *provider* that creates a `SecureRandom` *implementation*.
+* "I want to *bind* the `Database` type to a *singleton* that contains a `SQLiteDatabase` *implementation*.
+
+In DI, you *bind* a type (often an interface) to a *binding* that manages an *implementation*.
+A binding is responsible for returning the implementation when asked.
+In this example, we have seen two different bindings:
+
+* The *provider* always returns a new implementation instance.
+* The *singleton* creates only one implementation instance, and always returns that same instance.
+
+
+=== Declaration
+
+In Kodein-DI, bindings are *declared* in a DI Block.
+The syntax is quite simple:
+
+[source,kotlin]
+.Example: initialization of a DI container
+----
+val kodein = DI {
+    bind<Random>() with provider { SecureRandom() }
+    bind<Database>() with singleton { SQLiteDatabase() }
+}
+----
+
+As you can see, Kodein-DI offers a DSL (Domain Specific Language) that allows to very easily declare a binding.
+Kodein-DI offers many bindings that can manage implementations: `provider`, `singleton`, `factory`, `multiton`, `instance`, and more, which you can read about in the https://kodein.org/Kodein-DI/?{branch}/core#declaring-dependencies[bindings section of the core documentation].
+
+Most of the time, the type of the interface of the dependency is enough to identify it.
+There is only one `Database` in the application, so if I'm asking for a `Database`, there is no question of _which_ `Database` I need: I need _the_ database. +
+Same goes for `Random`. There is only one `Random` implementation that I am going to use.
+If I am asking for a `Random` implementation, I always want the same type of random: `SecureRandom`. +
+There are times, however, where the type of the dependency is _not_ enough to identify it.
+For example, you may have two `Database` in a mobile application: one being local, and another being a proxy to a distant Database.
+For cases like this, Kodein-DI allows you to "tag" a binding: add an additional information to tag it.
+
+[source,kotlin]
+.Example: tagged bindings
+----
+val kodein = DI {
+    bind<Database>(tag = "local") with singleton { SQLiteDatabase() }
+    bind<Database>(tag = "remote") with provider { DatabaseProxy() }
+}
+----
+
+
+=== Separation
+
+When building large applications, there are often different modules, built by their own team, each defining their own business units.
+
+Kodein-DI allows you to define binding modules that can later be imported in a DI container:
+
+[source,kotlin]
+.Example: A DI module
+----
+val module = DI.Module {
+    bind<Database>(tag = "local") with singleton { SQLiteDatabase() }
+    bind<Database>(tag = "remote") with provider { DatabaseProxy() }
+}
+----
+
+[source,kotlin]
+.Example: Importing a DI module
+----
+val di = DI {
+    import(module)
+}
+----
+
+
+
+
+== Injection & Retrieval
+
+=== The container
+
+All declarations are made in the constructor of a DI *container*.
+Think of the DI container as the glue that allows you to ask for dependency.
+Whatever dependency you need, if it was declared in the DI container constructor, you can get it by asking DI.
+This means that you always need to be within reach of the `DI` object.
+There are multiple ways of doing so:
+
+* You can pass the `DI` object around, as a parameter to created objects.
+* You can have the `DI` object being statically available (in Android, for example, it is common to use a property of the `Application` object)
+
+
+=== Injection vs Retrieval
+
+Kodein-DI supports two different methods to allow a business unit to access its dependencies: *injection* and *retrieval*.
+
+* When dependencies are *injected*, the class is *provided* its dependencies at *construction*.
+* When dependencies are *retrieved*, the class is *responsible* for *getting* its own dependencies.
+
+Dependency injection is more pure in the sense that an injected class will have its dependency passed at construction and therefore not know anything about DI.
+It is however more cumbersome, and does not provide a lot of features. +
+At contrario, dependency retrieval is easier and feature full, but it requires the class to know about DI.
+
+In the end, it boils down to that question: *Do you need this class to be DI independent?*
+If you are building a library that will be used in multiple architecture, you probably do.
+If you are building an application, you probably don't.
+
+
+=== Injection
+
+If you want your class to be _injected_, then you need to declare its dependencies at construction:
+
+[source,kotlin]
+.Example: a class with dependencies at construction
+----
+class Presenter(private val db: Database, private val rnd: Random) {
+}
+----
+
+Now you need to be able to create a new instance of this `Presenter` class.
+With Kodein-DI, this is very easy:
+
+[source,kotlin]
+.Example: creating an object of an injected class
+----
+val presenter by di.newInstance { Presenter(instance(), instance()) }
+----
+
+For each argument of the `Presenter` constructor, you can simply use the `instance()` function, and Kodein-DI will actually pass the correct dependency.
+
+
+=== Retrieval
+
+When using retrieval, the class needs to be available to access a DI instance, either statically or by argument.
+In these examples, we'll use the argument.
+
+[source,kotlin]
+.Example: a class which retrieves its own dependencies
+----
+class Presenter(val di: DI) {
+    private val db: Database by di.instance()
+    private val rnd: Random by di.instance()
+}
+----
+
+Note the usage of the `by` keyword.
+When using dependency retrieval, *properties are retrieved lazily*.
+
+You can go a bit further and use the `KodeinAware` interface, which unlocks a lot of features:
+
+[source,kotlin]
+.Example: a KodeinAware class
+----
+class Presenter(override val di: DI): KodeinAware {
+    private val db: Database by instance()
+    private val rnd: Random by instance()
+}
+----
+
+Note that because everything is lazy by default, the access to the `DI` object in a `KodeinAware` class can itself be lazy:
+
+[source,kotlin]
+.Example: a KodeinAware class with lazy DI
+----
+class Presenter(): KodeinAware {
+    override val di by lazy { getApplicationContext().di }
+
+    private val db: Database by instance()
+    private val rnd: Random by instance()
+}
+----
+
+
+=== Direct
+
+If you don't want everything to be lazy (as it is by default), DI has you covered.
+Head to the https://kodein.org/Kodein-DI/?{branch}/core#direct-rectrieval[Retrival: Direct] section of the core documentation.
+
+
+== Transitive dependencies
+
+Let's say we want to declare the `Provider` in a binding.
+It has its own dependencies.
+Dependencies of dependencies are transitive dependencies.
+Handling those dependencies is actually very easy.
+
+If you are using injection, you can pass the argument the exact same way:
+
+[source,kotlin]
+.Example: binding the Presenter class with injection
+----
+val di = DI {
+    bind<Presenter>() with singleton { Presenter(instance(), instance()) }
+}
+----
+
+If you are using retrieval, simply pass the di property:
+
+[source,kotlin]
+.Example: binding the Presenter class with injection
+----
+val di = DI {
+    bind<Presenter>() with singleton { Presenter(di) }
+}
+----
+
+
+== Where to go next
+
+Kodein-DI offers a lot of features.
+All of them are documented, you can find them here: *http://kodein.org/Kodein-DI/?{branch}*.
+
+If you are using Kodein-DI on Android, you should read the http://kodein.org/Kodein-DI/?{branch}/android[Kodein on Android] documentation.

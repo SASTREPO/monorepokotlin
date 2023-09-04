@@ -1,0 +1,18 @@
+ext.module_group = "com.afollestad"
+ext.module_name = "dragselectrecyclerviewsample"
+
+apply from: rootProject.file("gradle/android_application_config.gradle")
+
+dependencies {
+  implementation project(":library")
+
+  implementation deps.afollestad.material_cab
+  implementation deps.afollestad.recyclical
+  implementation deps.afollestad.rxkprefs.core
+  implementation deps.afollestad.rxkprefs.rxjava
+
+  implementation deps.androidx.core
+
+  implementation deps.rxjava
+  implementation deps.kotlin.stdlib8
+}

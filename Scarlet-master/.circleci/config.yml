@@ -1,0 +1,23 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/android:api-28-alpha
+    environment:
+        TERM: dumb
+        JAVA_TOOL_OPTIONS: "-Xmx1g"
+        GRADLE_OPTS: '-Dorg.gradle.parallel=false -Dorg.gradle.daemon=false'
+        CIRCLE_TEST_REPORTS: test-reports
+    steps:
+      - checkout
+      - run:
+          name: Disable PreDexing
+          command:  echo "disablePreDex" >> gradle.properties
+      - run: if [ -e ./gradlew ]; then ./gradlew dependencies;else gradle dependencies;fi
+      - run: ./gradlew test
+      - run: mkdir -p $CIRCLE_TEST_REPORTS/junit/
+      - run: find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+      - run:
+          name: Deploy Snapshot
+          command: ./publish.sh

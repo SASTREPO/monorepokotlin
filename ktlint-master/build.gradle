@@ -1,0 +1,161 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm' apply false
+  id 'com.github.breadmoirai.github-release'
+}
+
+ext.versions = [
+  'kotlin': gradle.ext.isKotlinDev ? '1.4.10-rc-345' : '1.4.0',
+  'gradle': '6.6',
+  'gradle-sha256': 'e6f83508f0970452f56197f610d13c5f593baaf43c0e3c6a571e5967be754025'
+]
+
+ext.deps = [
+  'kotlin'        : [
+    'stdlib'  : "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
+    'compiler': "org.jetbrains.kotlin:kotlin-compiler-embeddable:${versions.kotlin}"
+  ],
+  'klob'          : 'com.github.shyiko.klob:klob:0.2.1',
+  ec4j            : 'org.ec4j.core:ec4j-core:0.2.2',
+  'picocli'       : 'info.picocli:picocli:3.9.6',
+  // Testing libraries
+  'junit'         : 'junit:junit:4.12',
+  'assertj'       : 'org.assertj:assertj-core:3.12.2',
+  'jimfs'         : 'com.google.jimfs:jimfs:1.1'
+]
+
+if (gradle.ext.isKotlinDev) {
+  allprojects { p ->
+    String definedVersion = p.ext."VERSION_NAME".minus("-SNAPSHOT")
+    p.ext."VERSION_NAME" = "$definedVersion-kotlin-dev-SNAPSHOT".toString()
+  }
+}
+
+configurations {
+  ktlint
+}
+
+dependencies {
+  ktlint project(':ktlint')
+}
+
+task ktlint(type: JavaExec, group: LifecycleBasePlugin.VERIFICATION_GROUP) {
+  description = "Check Kotlin code style."
+  classpath = configurations.ktlint
+  main = 'com.pinterest.ktlint.Main'
+  args '*/src/**/*.kt'
+}
+
+allprojects {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+
+    if (gradle.ext.isKotlinDev) {
+      maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+      maven { url 'https://dl.bintray.com/kotlin/kotlin-dev' }
+    }
+  }
+
+  tasks.withType(JavaCompile) {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+  }
+
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+      jvmTarget = '1.8'
+      apiVersion = '1.3'
+    }
+  }
+}
+
+subprojects { subProject ->
+  // Do not enabling explicit api for cli project
+  if (subProject.name != "ktlint") {
+    subProject.plugins.withId("org.jetbrains.kotlin.jvm") {
+      subProject.extensions.configure("kotlin") { ext ->
+        ext.explicitApi = 'warning'
+      }
+    }
+  }
+}
+
+/**
+ * Configures "wrapper" task to use specific Gradle version and distribution type.
+ */
+tasks.withType(Wrapper.class).configureEach {
+  gradleVersion = versions.gradle
+  distributionType = Wrapper.DistributionType.BIN
+}
+
+// Deployment tasks
+String getGithubToken() {
+  if (project.hasProperty("servers.github.privKey")) {
+    return project.'servers.github.privKey'
+  } else {
+    logger.warn("No github token specified")
+    return ""
+  }
+}
+
+// Explicitly adding dependency on "shadowJarExecutable" as Gradle does not it set via "releaseAssets" property
+tasks.named("githubRelease") {
+  dependsOn { project(":ktlint").tasks.named("shadowJarExecutable") }
+}
+
+githubRelease {
+  token getGithubToken()
+  owner "pinterest"
+  repo "ktlint"
+  tagName project.properties['VERSION_NAME']
+  releaseName project.properties['VERSION_NAME']
+  releaseAssets project.files({
+    // "shadowJarExecutableChecksum" task does not declare checksum files
+    // as output, only the whole output directory. As it uses the same directory
+    // as "shadowJarExecutable" - just pass all the files from that directory
+    project(":ktlint").tasks.named("shadowJarExecutable").get()
+      .outputs
+      .files
+      .singleFile
+      .parentFile
+      .listFiles()
+  })
+  overwrite true
+  dryRun false
+  body {
+    String changelog = project.file("CHANGELOG.md").text
+    changelog = changelog.substring(changelog.indexOf("## "))
+    // 1 in indexOf here to skip first "## [" occurence
+    changelog.substring(0, changelog.indexOf("## [", 1))
+  }
+}
+
+// Put "servers.github.privKey" in "$HOME/.gradle/gradle.properties".
+def announceTask = tasks.register("announceRelease", Exec.class) { announceTask ->
+  group = "Help"
+  description = "Runs .announce script"
+  subprojects
+    .findAll { !it.name.contains("ktlint-ruleset-template") }
+    .each { subproject ->
+      announceTask.dependsOn subproject.tasks.named("publishMavenPublicationToMavenCentralRepository")
+    }
+
+  commandLine './.announce', '-y'
+  environment VERSION: "${project.'VERSION_NAME'}"
+  environment GITHUB_TOKEN: "${getGithubToken()}"
+}
+
+tasks.register("publishNewRelease", DefaultTask.class) {
+  group = "Help"
+  description = "Triggers uploading new archives and publish announcements"
+  dependsOn(announceTask, tasks.named("githubRelease"))
+}
+
+tasks.withType(Wrapper).configureEach {
+  gradleVersion = versions.'gradle'
+  distributionSha256Sum = versions.'gradle-sha256'
+  distributionType = Wrapper.DistributionType.BIN
+}

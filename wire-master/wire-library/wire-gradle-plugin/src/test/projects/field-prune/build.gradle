@@ -1,0 +1,12 @@
+plugins {
+  id 'application'
+  id 'org.jetbrains.kotlin.jvm'
+  id 'com.squareup.wire'
+}
+
+wire {
+  // Keeps all fields, except 'name', in 'Dinosaur'
+  prune 'squareup.dinosaurs.Dinosaur#name'
+
+  kotlin {}
+}

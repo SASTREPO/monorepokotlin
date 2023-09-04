@@ -1,0 +1,13 @@
+plugins {
+  id 'application'
+  id 'org.jetbrains.kotlin.jvm'
+  id 'com.squareup.wire'
+}
+
+wire {
+  // Keeps 'Dinosaur#name' and 'squareup.geology.Period' as roots of the object graph
+  root 'squareup.dinosaurs.Dinosaur#name'
+  root 'squareup.dinosaurs.Dinosaur#length_meters'
+
+  kotlin {}
+}

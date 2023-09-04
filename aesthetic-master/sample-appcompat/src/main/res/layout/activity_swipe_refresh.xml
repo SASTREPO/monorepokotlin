@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+  <androidx.appcompat.widget.Toolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:background="?colorPrimary"
+      android:elevation="@dimen/toolbar_elevation"
+      app:navigationIcon="@drawable/ic_arrow_back"
+      app:title="@string/swipe_refresh"
+      tools:ignore="UnusedAttribute"
+      />
+
+  <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+      android:id="@+id/swipe_refresh_layout"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      >
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+      <TextView
+          android:id="@+id/center_body"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:gravity="center"
+          android:text="@string/swipe_refresh_guide"
+          android:textColor="?colorAccent"
+          android:textSize="@dimen/text_size_huge"
+          />
+
+    </FrameLayout>
+
+  </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>

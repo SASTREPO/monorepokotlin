@@ -1,0 +1,8 @@
+*.iml
+**/.idea/*
+!.idea/vcs.xml
+!.idea/icon.png
+.gradle
+out
+build
+classes

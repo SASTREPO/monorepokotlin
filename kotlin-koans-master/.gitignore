@@ -1,0 +1,16 @@
+out
+
+# IDEA
+.idea
+*.iml
+local.properties
+
+# Gradle
+.gradle
+build
+
+# Eclipse
+bin
+.settings
+.project
+.classpath

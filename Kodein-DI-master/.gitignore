@@ -1,0 +1,24 @@
+# INTELLIJ
+**/.idea/*
+!.idea/icon.png
+!.idea/vcs.xml
+*.ipr
+*.iml
+
+# SYSTEM FILES
+*~
+.DS_STORE
+
+# GRADLE
+.gradle
+build/
+out/
+!dokka/out/
+gradle.properties
+gradle.props
+local.properties
+.gradletasknamecache
+
+# JS
+node_modules/
+package-lock.json

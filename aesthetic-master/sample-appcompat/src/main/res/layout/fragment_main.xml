@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+  <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:clipToPadding="false"
+      android:paddingBottom="@dimen/content_inset"
+      >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/content_inset"
+        android:paddingEnd="@dimen/content_inset"
+        android:paddingStart="@dimen/content_inset"
+        android:paddingTop="@dimen/content_inset_more"
+        >
+
+      <androidx.appcompat.widget.SwitchCompat
+          android:id="@+id/switch_theme"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="@string/dark_theme"
+          android:textOff="@string/dark_theme_off"
+          android:textOn="@string/dark_theme_on"
+          />
+
+      <Button
+          android:id="@+id/btn_black"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          android:text="@string/black"
+          />
+
+      <Button
+          android:id="@+id/btn_red"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_quarter"
+          android:text="@string/red"
+          />
+
+      <Button
+          android:id="@+id/btn_purple"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_quarter"
+          android:text="@string/purple"
+          />
+
+      <Button
+          android:id="@+id/btn_blue"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_quarter"
+          android:text="@string/blue"
+          />
+
+      <Button
+          android:id="@+id/btn_green"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_quarter"
+          android:text="@string/green"
+          />
+
+      <Button
+          android:id="@+id/btn_white"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_quarter"
+          android:text="@string/white"
+          />
+
+      <TextView
+          android:id="@+id/title_textview"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_more"
+          android:text="@string/hello_world"
+          android:textColor="?colorAccent"
+          android:textSize="@dimen/text_size_title"
+          />
+
+      <TextView
+          android:id="@+id/body_textview"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="@string/lorem_ipsum"
+          android:textSize="@dimen/text_size_body"
+          />
+
+      <EditText
+          android:id="@+id/input"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          android:hint="@string/hello_world"
+          android:inputType="text|textAutoComplete"
+          />
+
+      <com.google.android.material.textfield.TextInputLayout
+          android:id="@+id/text_input_layout"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          >
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/text_input_layout"
+            />
+
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <SeekBar
+          android:id="@+id/seeker"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginLeft="-4dp"
+          android:layout_marginRight="-4dp"
+          android:layout_marginTop="@dimen/content_inset"
+          android:max="100"
+          android:progress="50"
+          />
+
+      <Spinner
+          android:id="@+id/spinner"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          />
+
+      <ProgressBar
+          android:id="@+id/progress_bar"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center_horizontal"
+          android:layout_marginTop="@dimen/content_inset"
+          />
+
+      <Button
+          android:id="@+id/btn_disabled"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          android:enabled="false"
+          android:text="@string/disabled_button"
+          />
+
+      <Button
+          android:id="@+id/btn_borderless"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          android:text="@string/borderless_button"
+          style="?borderlessButtonStyle"
+          />
+
+      <Button
+          android:id="@+id/btn_dialog"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset"
+          android:text="@string/show_materialdialog"
+          />
+
+      <androidx.cardview.widget.CardView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/content_inset_more"
+          app:cardUseCompatPadding="true"
+          >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/content_inset"
+            >
+
+          <TextView
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/hello_world"
+              android:textColor="?android:textColorPrimary"
+              android:textSize="@dimen/text_size_title"
+              />
+
+          <TextView
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/lorem_ipsum"
+              android:textColor="?android:textColorSecondary"
+              android:textSize="@dimen/text_size_body"
+              />
+
+        </LinearLayout>
+
+      </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+  </ScrollView>
+
+  <com.google.android.material.floatingactionbutton.FloatingActionButton
+      android:id="@+id/fab"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="bottom|end"
+      android:clickable="true"
+      android:focusable="true"
+      app:elevation="@dimen/content_inset_half"
+      app:fabSize="normal"
+      app:srcCompat="@drawable/ic_check"
+      app:useCompatPadding="true"
+      />
+
+</FrameLayout>
